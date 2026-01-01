@@ -1,5 +1,14 @@
+# ai models
 ollama
 google-generativeai
-streamlit
 groq
+
+# environment management
+streamlit
 python-dotenv
+
+# langchain ecosystem
+langchain
+langchain-core
+langchain-community
+langserve

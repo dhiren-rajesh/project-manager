@@ -1,5 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
+from ai_agent import generate_project_plan
 
 load_dotenv()
 
@@ -8,7 +9,11 @@ st.write("Welcome to the Project Manager App.\n Type in you project details and 
 input_text = st.text_area("Enter your project details here:")
 
 if st.button("Plan Project"):
-    st.write("Planning your project...")
-    # Write the logic here to interact with the AI agent and generate the project plan
-    st.write("Project plan generated successfully!")
+    if not input_text.strip():
+        st.warning("Please enter project details.")
+    else:
+        with st.spinner("Planning your project..."):
+            plan = generate_project_plan(input_text)
 
+        st.success("Project plan generated successfully!")
+        st.write(plan)
