@@ -1,0 +1,5 @@
+ollama
+google-generativeai
+streamlit
+groq
+python-dotenv
