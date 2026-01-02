@@ -1,9 +1,12 @@
-# lpu
+# ai models/lpu
+ollama
+google-genai
 groq
 
 # environment management
 streamlit
 python-dotenv
+google
 
 # langchain ecosystem
 langchain
