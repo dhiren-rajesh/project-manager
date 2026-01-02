@@ -3,3 +3,6 @@
 
 #Virtual Environments
 pm-venv/
+
+#Python Cache
+__pycache__/

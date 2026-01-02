@@ -1,18 +1,36 @@
 import os
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
-from google.generativeai import genai
+from langchain_groq import ChatGroq
 
 load_dotenv()
 
-API_KEY = os.getenv("GOOGLE_API_KEY")
-genai.configure(api_key=API_KEY)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-prompt_temmplate = ChatPromptTemplate("""Generate a detailed project plan for the following project: {project_details}. 
-                                Return a small description of the plan followed by the split in a tabular format. 
-                                The split should include the tasks side by side with the estimated time for each task.""")
+prompt_template = ChatPromptTemplate.from_template(
+    """
+Generate a detailed project plan for the following project:
+
+{project_details}
+
+Return:
+1. A short description of the project plan
+2. A table with columns:
+   - Task
+   - Description
+   - Estimated Time
+"""
+)
+
 
 def generate_project_plan(project_details: str) -> str:
     # Placeholder function to simulate AI-generated project plan
-    prompt = prompt_temmplate.format(project_details=project_details)
-    
+    prompt = prompt_template.format_prompt(project_details=project_details)
+    llm = ChatGroq(
+        api_key=GROQ_API_KEY,
+        model="llama-3.3-70b-versatile",
+        temperature=0.3
+    )
+
+    response = llm.invoke(prompt)
+    return response.content

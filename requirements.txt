@@ -1,6 +1,4 @@
-# ai models
-ollama
-google-generativeai
+# lpu
 groq
 
 # environment management
@@ -11,4 +9,5 @@ python-dotenv
 langchain
 langchain-core
 langchain-community
+langchain-groq
 langserve
