@@ -20,45 +20,45 @@ prompt_stock = (
     "5. ONLY return the name, stock and available columns."
 )
 
-prompt_search = """
+prompt_search_template = """
     ### User Input
     {user_input}
 
     ### Rules
     1. ONLY return books if the user input contains "id=<number>" exactly.
     2. If the rule is violated, return: "No book found".
-    3. Match ONLY the given ID.
+    3. Match ONLY the given ID or exact book title.
     4. Output must be in tabular format.
     5. Include all columns EXCEPT stock.
     6. Do NOT create books which are not in the DB.
-    7. If user input is comma separted, return the EVERY book which satisfies ANY user inputs.
+    7. If user input is comma separated, return EVERY book which satisfies ANY user inputs.
 """
 
-
 def multi_agent_system(user_input):
-    # Coordinator must run INSIDE the function
+    # Coordinator runs inside the function
     coordinator_prompt = f"""
-    You are a coordinator agent.
+        You are a coordinator agent.
 
-    Rules:
-    1. If the user input has STOCK or AVAILABILITY, return EXACTLY:
-       STOCK_AGENT
-    2. If the user input has id=<number> or a book name, return EXACTLY:
-       SEARCH_AGENT
-    3. Return ONLY one term. No explanations.
+        Rules:
+        1. If the user input has STOCK or AVAILABILITY, return EXACTLY:
+        STOCK_AGENT
+        2. If the user input has id=<number> or a book name, return EXACTLY:
+        SEARCH_AGENT
+        3. Return ONLY one term. No explanations.
 
-    User Input:
-    {user_input}
+        User Input:
+        {user_input}
     """
 
+    # Coordinator decides which agent to run
     coordinator_response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=[coordinator_prompt]
     )
 
-    decision = coordinator_response.text.strip()
+    decision = coordinator_response.text.strip().upper()
 
-    # Run ONLY the selected agent
+    # Run only the selected agent
     if decision == "STOCK_AGENT":
         response = client.models.generate_content(
             model="gemini-2.5-flash",
@@ -70,6 +70,8 @@ def multi_agent_system(user_input):
         return response.text
 
     elif decision == "SEARCH_AGENT":
+        # Inject actual user input into the search prompt
+        prompt_search = prompt_search_template.format(user_input=user_input)
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=[
@@ -81,8 +83,6 @@ def multi_agent_system(user_input):
 
     else:
         return "Unable to route request"
-
-
 
 if __name__ == "__main__":
     input_examples = [
@@ -96,5 +96,3 @@ if __name__ == "__main__":
         result = multi_agent_system(user_input)
         print(result)
         print("\n" + "-"*50 + "\n")
-
-
