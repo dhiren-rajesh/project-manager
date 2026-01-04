@@ -12,7 +12,6 @@ BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "db.json"
 db_text = DB_PATH.read_text(encoding="utf-8")
 
-
 prompt_stock = (
     "1. Maintain the stock of books in a library system and return it. "
     "2. Mention whether the book is available or not, based on stock."
@@ -20,9 +19,8 @@ prompt_stock = (
     "4. Do NOT create books which are not in the DB."
     "5. ONLY return the name, stock and available columns."
 )
-user_input = "id=4, To Kill a Mockingbird"
 
-prompt_search = f"""
+prompt_search = """
     ### User Input
     {user_input}
 
@@ -36,22 +34,67 @@ prompt_search = f"""
     7. If user input is comma separted, return the EVERY book which satisfies ANY user inputs.
 """
 
-response_stock = client.models.generate_content(
-    model="gemini-2.5-flash-lite",
-    contents=[
-        f"Library database:\n{db_text}",
-        prompt_stock
-    ]
-)
 
-response_search = client.models.generate_content(
-    model="gemini-2.5-flash-lite",
-    contents=[
-        f"Library database:\n{db_text}",
-        prompt_search
-    ]
-)
+def multi_agent_system(user_input):
+    # Coordinator must run INSIDE the function
+    coordinator_prompt = f"""
+    You are a coordinator agent.
 
-print("Stock: \n", response_stock.text)
-print("Search:\n ", response_search.text)
+    Rules:
+    1. If the user input has STOCK or AVAILABILITY, return EXACTLY:
+       STOCK_AGENT
+    2. If the user input has id=<number> or a book name, return EXACTLY:
+       SEARCH_AGENT
+    3. Return ONLY one term. No explanations.
+
+    User Input:
+    {user_input}
+    """
+
+    coordinator_response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[coordinator_prompt]
+    )
+
+    decision = coordinator_response.text.strip()
+
+    # Run ONLY the selected agent
+    if decision == "STOCK_AGENT":
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                f"Library database:\n{db_text}",
+                prompt_stock
+            ]
+        )
+        return response.text
+
+    elif decision == "SEARCH_AGENT":
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                f"Library database:\n{db_text}",
+                prompt_search
+            ]
+        )
+        return response.text
+
+    else:
+        return "Unable to route request"
+
+
+
+if __name__ == "__main__":
+    input_examples = [
+        "id=4, To Kill a Mockingbird",
+        "Show stock and availability",
+        "id=10, Some Other Book",
+    ]
+
+    for user_input in input_examples:
+        print("User Input:", user_input)
+        result = multi_agent_system(user_input)
+        print(result)
+        print("\n" + "-"*50 + "\n")
+
 
